@@ -9,78 +9,82 @@ import SwiftUI
 import CoreData
 
 struct ContentView: View {
+    
     @Environment(\.managedObjectContext) private var viewContext
-
+    
+    //most important as profiles updates UI also gets udpated
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
-        animation: .default)
-    private var items: FetchedResults<Item>
-
+           sortDescriptors: [NSSortDescriptor(keyPath: \Profile.id, ascending: false)],
+           animation: .default
+       )
+    private var profiles: FetchedResults<Profile>
+    
+    @State private var sampleImage = UIImage(systemName: "person.fill")
+    @State private var pickedColor = Color.blue
+    
+    let manager = ProfileManager.shared
+    
     var body: some View {
         NavigationView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp!, formatter: itemFormatter)")
-                    } label: {
-                        Text(item.timestamp!, formatter: itemFormatter)
+            VStack {
+                Button("Create Sample Profile") {
+                    createSample()
+                }
+                .padding()
+                
+                List {
+                    ForEach(profiles) { profile in
+                        HStack {
+                            if let img = profile.uiImage {
+                                Image(uiImage: img)
+                                    .resizable()
+                                    .frame(width: 60, height: 60)
+                                    .clipShape(Circle())
+                            }
+                            
+                            VStack(alignment: .leading) {
+                                Text("ID: \(profile.id?.uuidString.prefix(6) ?? "")")
+                                Text("Tags: \((profile.tags as? Set<String>)?.joined(separator: ", ") ?? "None")")
+                                    .font(.caption)
+                                
+                                Text("Color Preview")
+                                    .padding(4)
+                                    .background(Color(profile.uiColor))
+                                    .cornerRadius(6)
+                            }
+                            
+                            Spacer()
+                            
+                            Button("Update") {
+                                manager.updateProfile(profile: profile, newColor: UIColor.randomColor)
+                            }
+                            .buttonStyle(.bordered)
+                                                        
+                            Button("Delete") {
+                                manager.deleteProfile(profile)
+                            }
+                            .buttonStyle(.bordered)
+                            .foregroundColor(.red)
+                        }
+                        .background(Color.cyan)
                     }
                 }
-                .onDelete(perform: deleteItems)
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
-            Text("Select an item")
+            .navigationTitle("Non-Primitive Core Data")
+            .onAppear { }
         }
     }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            offsets.map { items[$0] }.forEach(viewContext.delete)
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
-        }
+    
+    func createSample() {
+        manager.createProfile(id: UUID(), photos: sampleImage ?? UIImage(), scores: [10, 20, 30], favouriteColor: UIColor.randomColor, tags: ["Swift", "iOS", "CoreData"], settings: ["theme": "dark", "volume": 0.8])
     }
 }
 
-private let itemFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .short
-    formatter.timeStyle = .medium
-    return formatter
-}()
-
-#Preview {
-    ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+extension UIColor {
+    static var randomColor: UIColor {
+        let r = Double.random(in: 0...1)
+        let b = Double.random(in: 0...1)
+        let g = Double.random(in: 0...1)
+        return UIColor(red: r, green: g, blue: b, alpha: 1)
+    }
 }

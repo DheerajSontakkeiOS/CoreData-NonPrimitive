@@ -9,12 +9,12 @@ import SwiftUI
 
 @main
 struct CoreData_NonPrimitiveApp: App {
-    let persistenceController = PersistenceController.shared
+    let persistenceController = CoreDataHandler.shared
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .environment(\.managedObjectContext, persistenceController.context)
         }
     }
 }

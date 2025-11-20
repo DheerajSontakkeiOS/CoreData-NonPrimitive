@@ -5,7 +5,7 @@
 //  Created by MOBILE HUTT on 17/11/25.
 //
 
-import CoreData
+/*import CoreData
 
 struct PersistenceController {
     static let shared = PersistenceController()
@@ -15,8 +15,7 @@ struct PersistenceController {
         let result = PersistenceController(inMemory: true)
         let viewContext = result.container.viewContext
         for _ in 0..<10 {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
+            let newItem = Profile(context: viewContext)
         }
         do {
             try viewContext.save()
@@ -54,4 +53,4 @@ struct PersistenceController {
         })
         container.viewContext.automaticallyMergesChangesFromParent = true
     }
-}
+}*/
